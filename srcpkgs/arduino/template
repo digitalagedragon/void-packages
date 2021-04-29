@@ -1,12 +1,13 @@
 # Template file for 'arduino'
 pkgname=arduino
 version=1.8.13
-revision=1
+revision=2
 archs="x86_64* i686* aarch64* arm*"
 wrksrc=$pkgname-$version
 create_wrksrc=yes
 build_wrksrc=Arduino-$version
-hostmakedepends="apache-ant unzip ImageMagick openjdk8 tar"
+hostmakedepends="apache-ant unzip ImageMagick openjdk8 tar go"
+makedepends="libserialport-devel openjdk8 llvm11 clang libclang-cpp"
 depends="virtual?java-runtime avr-binutils avr-gcc avr-libc avrdude"
 short_desc="IDE for the arduino open-source electronics prototyping platform"
 maintainer="Enno Boland <gottox@voidlinux.org>"
@@ -14,15 +15,21 @@ license="GPL-2.0-or-later, LGPL-2.0-or-later"
 homepage="http://arduino.cc/"
 distfiles="
  https://github.com/arduino/Arduino/archive/${version}.tar.gz
+ https://github.com/arduino/listSerialPortsC/archive/refs/tags/1.4.0.tar.gz
+ https://github.com/arduino/arduino-builder/releases/download/1.5.4/arduino-builder-1.5.4.tar.xz
+ https://github.com/arduino/arduino-preprocessor/archive/refs/tags/0.1.5.tar.gz
  ${SOURCEFORGE_SITE}/astyle/astyle_3.0.1_linux.tar.gz"
 checksum="2a2a7bf0a93d36dff2e27f50e490529f10ff73337d6a0b7b222fa6b1a529c9f7
+ 8769ddf5395c47744cde01cdf1d943a260b1dc4d03658255c1cf719a2592d5eb
+ e305f99d86cd6efe1265bebbebc9e37b7cd0f98169fe8ee3198233a4341376cc
+ 3da82822869997b711b2bb72f2bc6dbcf4858ae700f731b6748913ee8796ddb4
  6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd"
 nostrip=yes
 nocross="cross build lacks essential libraries"
 
-if [ "$XBPS_TARGET_LIBC" = musl ]; then
-	broken="downloads multiple binaries linked to glibc; segfaults with gcompat"
-fi
+#if [ "$XBPS_TARGET_LIBC" = musl ]; then
+#	broken="downloads multiple binaries linked to glibc; segfaults with gcompat"
+#fi
 
 do_build() {
 	. /etc/profile.d/apache-ant.sh
@@ -32,11 +39,31 @@ do_build() {
 	export CFLAGS+=" -I${XBPS_CROSS_BASE}/usr/lib/jvm/java-1.8-openjdk/include"
 
 	mkdir -p build/linux/work/lib
-	cd ../astyle/build/gcc
+	
+	pushd ../astyle/build/gcc
 	make ${makejobs} java
 	cp bin/libastylej.so.3.0.1 \
 		../../../Arduino-$version/build/linux/work/lib/libastylej.so
-	cd  ../../../Arduino-$version/build
+	popd
+
+	pushd ../listSerialPortsC-1.4.0
+	$CC $CFLAGS jnilib.c $LDFLAGS -lserialport -shared -fPIC -o liblistSerialsj.so
+	cp liblistSerialsj.so ../Arduino-$version/build/linux/work/lib/liblistSerialsj.so
+	popd
+
+	pushd ../arduino-builder-1.5.4
+	#go install -p "$XBPS_MAKEJOBS" -x github.com/arduino/arduino-builder
+	popd
+
+	pushd ../arduino-preprocessor-0.1.5
+	$CXX $(llvm-config --cxxflags) \
+		$(llvm-config --ldflags) -static-libstdc++ \
+		$(llvm-config --libs --system-libs) \
+		main.cpp ArduinoDiagnosticConsumer.cpp CommandLine.cpp IdentifiersList.cpp CodeCompletion.cpp -o arduino-preprocessor
+	false
+	popd
+
+	cd  ../Arduino-$version/build
 	case "$XBPS_TARGET_MACHINE" in
 		i686*) LINUX_BUILD=linux32-build ;;
 		x86_64*) LINUX_BUILD=linux64-build ;;
@@ -47,6 +74,11 @@ do_build() {
 		-e "s#\(tools\.avrdude\.config\.path=\).*#\1/etc/avrdude.conf#" \
 		linux/work/hardware/arduino/avr/platform.txt
 	convert linux/work/lib/arduino_icon.ico icon.png
+
+
+	# TODO
+	cp ../../arduino-builder-1.5.4/arduino-builder linux/work/arduino-builder
+	false
 }
 
 do_install() {

@@ -1,5 +1,5 @@
---- Arduino-1.8.13/build/build.xml.orig	2020-12-27 20:34:41.813419495 +0100
-+++ Arduino-1.8.13/build/build.xml	2020-12-27 20:32:58.075425211 +0100
+--- Arduino-1.8.13/build/build.xml.orig	2021-04-29 11:47:32.581248730 -0700
++++ Arduino-1.8.13/build/build.xml	2021-04-29 11:47:47.679215038 -0700
 @@ -345,7 +345,7 @@
  
      <!-- figure out the IDE version number in base.java -->
@@ -9,7 +9,7 @@
        <filterchain>
          <tokenfilter>
            <linetokenizer />
-@@ -659,14 +659,6 @@
+@@ -659,53 +659,19 @@
    </target>
  
    <target name="linux-libastyle-x86" depends="linux-build" description="Download libastyle.so for x86/x64 arch">
@@ -24,7 +24,17 @@
  
      <antcall target="portable-${portable}">
        <param name="parentdir" value="linux/work" />
-@@ -684,14 +676,6 @@
+     </antcall>
+ 
+-    <antcall target="unzip">
+-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
+-      <param name="dest_folder" value="${staging_folder}" />
+-    </antcall>
+-    <copy file="linux/liblistSerials-${LIBLISTSERIAL-VERSION}/linux${arch-bits}/liblistSerialsj.so" todir="linux/work/lib/" />
+-    <chmod perm="755" file="linux/work/lib/liblistSerialsj.so" />
+-
    </target>
  
    <target name="linux-libastyle-arm" depends="linux-build" description="Download libastyle.so for ARM">
@@ -39,7 +49,21 @@
  
      <antcall target="portable-${portable}">
        <param name="parentdir" value="linux/work" />
-@@ -715,26 +699,9 @@
+     </antcall>
+ 
+-    <antcall target="unzip">
+-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
+-      <param name="dest_folder" value="${staging_folder}" />
+-    </antcall>
+-    <copy file="linux/liblistSerials-${LIBLISTSERIAL-VERSION}/arm/liblistSerialsj.so" todir="linux/work/lib/" />
+-    <chmod perm="755" file="linux/work/lib/liblistSerialsj.so" />
+-
+   </target>
+ 
+   <target name="linuxarm-build" depends="linux-libastyle-arm" description="Build linux (32-bit) version">
+@@ -715,39 +681,14 @@
  
      <antcall target="build-arduino-builder" />
  
@@ -66,7 +90,20 @@
  
      <antcall target="portable-${portable}">
        <param name="parentdir" value="linux/work" />
-@@ -757,15 +724,6 @@
+     </antcall>
+ 
+-    <antcall target="unzip">
+-      <param name="archive_file" value="./liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="archive_url" value="https://downloads.arduino.cc/liblistSerials/liblistSerials-${LIBLISTSERIAL-VERSION}.zip" />
+-      <param name="final_folder" value="${staging_folder}/liblistSerials-${LIBLISTSERIAL-VERSION}" />
+-      <param name="dest_folder" value="${staging_folder}" />
+-    </antcall>
+-    <copy file="linux/liblistSerials-${LIBLISTSERIAL-VERSION}/aarch64/liblistSerialsj.so" todir="linux/work/lib/" />
+-    <chmod perm="755" file="linux/work/lib/liblistSerialsj.so" />
+   </target>
+ 
+   <target name="linuxaarch64-build" depends="linux-libastyle-aarch64" description="Build Linux (AArch64) version">
+@@ -757,15 +698,6 @@
  
      <antcall target="build-arduino-builder" />
  
@@ -82,7 +119,7 @@
    </target>
  
    <target name="linux32-build" depends="linux-libastyle-x86" description="Build linux (32-bit) version">
-@@ -775,15 +733,6 @@
+@@ -775,15 +707,6 @@
  
      <antcall target="build-arduino-builder" />
  
@@ -98,7 +135,7 @@
    </target>
  
    <target name="linux64-build" depends="linux-libastyle-x86" description="Build linux (64-bit) version">
-@@ -793,15 +742,6 @@
+@@ -793,15 +716,6 @@
  
      <antcall target="build-arduino-builder" />
  
@@ -114,7 +151,7 @@
    </target>
  
    <target name="linux-jvm-noop"/>
-@@ -936,7 +876,7 @@
+@@ -936,7 +850,7 @@
    </target>
  
    <target name="linux-dist" depends="build"
@@ -123,7 +160,7 @@
  
      <move file="linux/work" tofile="linux/arduino-${version}" />
  
-@@ -960,23 +900,23 @@
+@@ -960,23 +874,23 @@
    </target>
  
    <target name="linux32-dist" depends="linux-dist"
@@ -152,7 +189,7 @@
      <delete dir="windows/work" />
      <delete>
        <fileset dir="windows" includes="arduino-*windows*.zip"/>
-@@ -1014,8 +954,8 @@
+@@ -1014,8 +928,8 @@
    </target>
  
    <target name="windows-build"
@@ -163,7 +200,7 @@
      <mkdir dir="windows/work" />
      <mkdir dir="windows/work/${staging_hardware_folder}" />
  
-@@ -1130,12 +1070,12 @@
+@@ -1130,12 +1044,12 @@
  
      <property name="launch4j.dir" value="windows/launcher/launch4j/" />
      <taskdef name="launch4j"
@@ -179,7 +216,7 @@
      </copy>
      <launch4j configFile="windows/work/config.xml" fileVersion="${revision}.0" txtFileVersion="${revision}" productVersion="${revision}.0" txtProductVersion="${revision}"/>
      <launch4j configFile="windows/work/config_debug.xml" fileVersion="${revision}.0" txtFileVersion="${revision}" productVersion="${revision}.0" txtProductVersion="${revision}"/>
-@@ -1206,22 +1146,22 @@
+@@ -1206,22 +1120,22 @@
    <!-- - - - - - - - -->
  
     <target name="source-dist" depends="revision-check"
@@ -214,7 +251,7 @@
      </tar>
  
      <echo>
-@@ -1239,7 +1179,7 @@
+@@ -1239,7 +1153,7 @@
    <!-- - - - - - - - -->
  
    <target name="clean" description="Perform a spring cleaning"
